@@ -10,11 +10,15 @@ import FoundationModels
 
 struct StartPage: View {
     // Model Related
+   
     @State var isUnderstanding: Bool = false
-    @State var kidName: String = "Kiki"
-    @State var kidGender: String = "Male"
-    @State var kidInterest: [String] = ["Robot", "Dinosaurus", "Magic", "Food", "Vehicles"]
-    @State var kidNationality: [String] = ["Indonesian", "Korean", "Brazillian"]
+    @State var kikiCharacter: Kiki = Kiki(
+        name: "Kiki",
+        sex: .boy,
+        interest: .car,
+        nationality: .indonesian)
+    @State var kidInterest: [String] = ["Car", "Cooking", "Dragon", "Video Game", "Play outside"]
+    @State var kidNationality: [String] = ["Brazillian", "Korean", "Indonesia"]
     
     @State var selectedInterest: String = ""
     @State var selectedNationality: String = ""
@@ -54,14 +58,14 @@ struct StartPage: View {
                             HStack {
                                 Text("Kid Name")
                                     .font(.callout)
-                                TextField("", text: $kidName)
+                                TextField("", text: $kikiCharacter.name)
                             }
                             .padding(.bottom)
                             
                             VStack(alignment: .leading) {
-                                Picker("Gender", selection: $kidGender) {
-                                    Text("Male").tag("Male")
-                                    Text("Female").tag("Female")
+                                Picker("Gender", selection: $kikiCharacter.sex) {
+                                    Text("Male").tag(Sex.boy)
+                                    Text("Female").tag(Sex.girl)
                                 }
                             }.pickerStyle(.segmented)
                             
@@ -72,6 +76,7 @@ struct StartPage: View {
                                     }
                                 }
                             }.pickerStyle(.radioGroup)
+                                .padding(.bottom)
                             
                             VStack(alignment: .leading) {
                                 Picker("Nationality", selection: $selectedNationality) {
