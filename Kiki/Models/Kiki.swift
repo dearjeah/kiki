@@ -19,15 +19,15 @@ enum Sex: CaseIterable {
 }
 
 enum Interest: String, CaseIterable {
-    case car
-    case cooking
-    case dragon
-    case videoGame = "video game"
-    case playOutside = "play outside"
+    case car = "Car"
+    case cooking = "Cooking"
+    case dragon = "Dragon"
+    case videoGame = "Video Game"
+    case playOutside = "Play Outside"
 }
 
-enum Nationality: CaseIterable {
-    case portuguese
-    case korean
-    case indonesian
+enum Nationality: String, CaseIterable {
+    case brazillian = "Brazillian"
+    case korean = "Korean"
+    case indonesian = "Indonesian"
 }
