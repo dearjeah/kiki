@@ -31,14 +31,28 @@ struct StartPage: View {
     @State private var instructions: String = "You are a facilitator who has an 10 years experience in developing a product development in Apple Ecosystem."
     @State private var nameDebounceWorkItem: DispatchWorkItem? = nil
     @State private var isResettingSession: Bool = false
-    
-    
+
+    @State private var kidAvatarCGImage: CGImage?
+    let generator = AvatarGenerator()
+
     var body: some View {
         VStack {
             switch SystemLanguageModel.default.availability {
             case .available:
                 ZStack {
-                    messagesList
+                    VStack {
+                        if let kidAvatarCGImage {
+                            Image(
+                                nsImage: NSImage(
+                                    cgImage: kidAvatarCGImage,
+                                    size: .init(width: 200, height: 200)
+                                )
+                            )
+                        } else {
+                            ProgressView("Waiting for Kiki")
+                        }
+                        messagesList
+                    }
                     if isResettingSession {
                         VStack {
                             ProgressView("Resetting session…")
@@ -51,7 +65,10 @@ struct StartPage: View {
                 }
                     .task {
                         if session == nil {
-                            Task { await resetSession() }
+                            Task {
+                                kidAvatarCGImage = try await generator.generateKiki(with: kikiCharacter)
+                                await resetSession()
+                            }
                         }
                     }
                     .toolbar {
