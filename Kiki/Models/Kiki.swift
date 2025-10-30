@@ -24,6 +24,7 @@ enum Interest: String, CaseIterable {
     case dragon = "Dragon"
     case videoGame = "Video Game"
     case playOutside = "Play Outside"
+    case ball = "Ball"
 }
 
 enum Nationality: String, CaseIterable {

@@ -20,43 +20,20 @@ enum AvatarGenerationError: Error {
 final class AvatarGenerator {
     var isGenerating: Bool = false
 
-    func generateAvatars(with persona: Kiki) async throws -> (CGImage, CGImage) {
+    func generateKiki(with persona: Kiki)  async throws -> CGImage? {
         isGenerating = true
 
-        let learnerPrompt =
-        "Create monkey wearing a hoodie with a bow tie"
-//            """
-//            Create a modern, friendly avatar of a learner from \(persona.nationality).
-//            The learner should look focused yet approachable.
-//            Style it as a clean, vibrant digital illustration style.
-//            The setting and clothing can subtly reflect the learner’s nationality.
-//            Use bright colors, warm lighting, and a confident, curious expression.
-//            """
+        let extractedrompt: ImagePlaygroundConcept = .extracted(
+            from: "Create a 5-year-old \(persona.nationality.rawValue) \(persona.sex.rawValue) that play with \(persona.interest.rawValue)."
+        )
+        let avatarReferenceImg = NSImage(named: persona.sex.rawValue)
+        guard let avatarReferenceCg = avatarReferenceImg?.cgImage else { return nil }
 
-        let kikiPrompt =
-        "create a black cat play with \(persona.interest)"
-//                """
-//                Create a friendly, cartoon-style avatar of a 5-year-old child named \(persona.name).
-//                The child is \(persona.sex), from \(persona.nationality), and loves \(persona.interest).
-//                Show the child smiling, with expressive eyes and a playful pose that reflects their interests.
-//                Use bright colors, soft lighting, and a cheerful, modern illustration style.
-//                The background should be simple or themed around their interests.
-//                Make the avatar look unique and full of personality — not generic.
-//                """
-
-        let learnerAvatar = try await generateImage(with: learnerPrompt)
-        let kikiAvatar = try await generateImage(with: kikiPrompt)
+        let kikiAvatar = try await generateImage(with: extractedrompt, referenceImg: avatarReferenceCg)
 
         isGenerating = false
 
-        guard let learnerImage = learnerAvatar else {
-            throw AvatarGenerationError.failedToGenerateLearnerAvatar
-        }
-        guard let kikiImage = kikiAvatar else {
-            throw AvatarGenerationError.failedToGenerateKikiAvatar
-        }
-
-        return (learnerImage, kikiImage)
+        return kikiAvatar
     }
 
     private func generateImage(with prompt: String) async throws -> CGImage? {
@@ -84,57 +61,18 @@ final class AvatarGenerator {
         return nil
     }
 
-    func generateAvatar(with avatarReference: CGImage) async throws -> CGImage? {
-        do {
-            let imageCreator = try await ImageCreator()
-            let style = ImagePlaygroundStyle.illustration
-
-            let images = imageCreator.images(
-                for: [
-                    .extracted(from: "A learner", title:
-"""
-                               Create a modern, friendly avatar of a learner from Indonesia.
-                               The learner should look focused yet approachable.
-                               Style it as a clean, vibrant digital illustration style.
-                               The setting and clothing can subtly reflect the learner’s nationality.
-                               Use bright colors, warm lighting, and a confident, curious expression.
-"""),
-                    .image(avatarReference)
-                ],
-                style: style,
-                limit: 1
-            )
-
-            for try await image in images {
-                return image.cgImage
-            }
-        } catch {
-            throw error
-        }
-
-        return nil
-    }
-
-    func generateKiki(with persona: Kiki)  async throws -> CGImage? {
+    private func generateImage(with prompt: ImagePlaygroundConcept, referenceImg: CGImage?) async throws -> CGImage? {
         do {
             let imageCreator = try await ImageCreator()
             let style = ImagePlaygroundStyle.animation
-            let avatarReference = NSImage(named: persona.sex.rawValue)
 
-            guard let cgImage = avatarReference?.cgImage else { return nil }
+            var concepts = [prompt]
+            if let referenceImg = referenceImg {
+                concepts.append(.image(referenceImg))
+            }
 
             let images = imageCreator.images(
-                for: [
-                    .extracted(from: "A learner", title:"""
-                        Create an full body avatar of a 5-year-old child named \(persona.name).
-                        The child is \(persona.sex), from \(persona.nationality), while do \(persona.interest).
-                        Show the child smiling, with expressive eyes and a playful pose that reflects their interests.
-                        Use bright colors, soft lighting, and a cheerful, modern illustration style.
-                        The background should be simple or themed around their interests.
-                        Make the avatar look unique and full of personality — not generic.)
-                        """),
-                    .image(cgImage)
-                ],
+                for: concepts,
                 style: style,
                 limit: 1
             )
@@ -142,6 +80,10 @@ final class AvatarGenerator {
             for try await image in images {
                 return image.cgImage
             }
+
+        }
+        catch ImageCreator.Error.notSupported {
+            print("Image creation not supported on the current device.")
         } catch {
             throw error
         }
@@ -166,7 +108,7 @@ extension NSImage {
     let kiki = Kiki(
         name: "Kiki",
         sex: .boy,
-        interest: .car,
+        interest: .ball,
         nationality: .korean
     )
     let generator = AvatarGenerator()
