@@ -14,7 +14,7 @@ struct Kiki {
     var nationality: Nationality
 }
 
-enum Sex: CaseIterable {
+enum Sex: String, CaseIterable {
     case boy, girl
 }
 
