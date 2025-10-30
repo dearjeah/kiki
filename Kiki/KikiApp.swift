@@ -11,7 +11,7 @@ import SwiftUI
 struct KikiApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AvatarTestingView()
         }
     }
 }
