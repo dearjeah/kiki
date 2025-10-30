@@ -107,8 +107,8 @@ extension NSImage {
 #Playground {
     let kiki = Kiki(
         name: "Kiki",
-        sex: .boy,
-        interest: .ball,
+        sex: .male,
+        interest: .animalNature,
         nationality: .korean
     )
     let generator = AvatarGenerator()
