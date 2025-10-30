@@ -14,20 +14,24 @@ struct Kiki {
     var nationality: Nationality
 }
 
-enum Sex: CaseIterable {
-    case boy, girl
+enum Sex: String, CaseIterable {
+    case male, female
+    case other = "Other / Unspecified"
 }
 
 enum Interest: String, CaseIterable {
-    case car = "Car"
-    case cooking = "Cooking"
-    case dragon = "Dragon"
-    case videoGame = "Video Game"
-    case playOutside = "Play Outside"
+    case animalNature = "Animals / Nature"
+    case spaceScience = "Space / Science"
+    case artDrawingMusic = "Art / Drawing / Music"
+    case sportMovement = "Sports / Movement"
+    case storiesFantasy = "Stories / Fantasy"
+    case other = "Other / None"
 }
 
 enum Nationality: String, CaseIterable {
-    case brazillian = "Brazillian"
+    case brazillian = "Brazilian"
     case korean = "Korean"
     case indonesian = "Indonesian"
+    case african = "African"
+    case other = "Other / Unspecified"
 }
