@@ -9,12 +9,12 @@ import Foundation
 import FoundationModels
 import Playgrounds
 
-@Generable
+@Generable(description: "The Bot's response to a question with understanding about the topic.")
 struct KikiResponse {
-    @Guide(description: "What Kiki say and ask according to the topic.")
+    @Guide(description: "What the bot say and ask according to the topic.")
     let say: String
 
-    @Guide(description: "Status for Kiki's understanding about the topic")
+    @Guide(description: "Status for the bot's understanding about the topic")
     let isUnderstand: Bool
 }
 
