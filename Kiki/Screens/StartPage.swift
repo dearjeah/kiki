@@ -97,8 +97,9 @@ struct StartPage: View {
                                 .onChange(of: kikiCharacter.sex) { _, _ in
                                     Task { await resetSession() }
                                 }
-                            }.pickerStyle(.segmented)
-                            
+                            }.pickerStyle(.radioGroup)
+                                .padding(.bottom)
+                                
                             VStack(alignment: .leading) {
                                 Picker("Interest", selection: $kikiCharacter.interest) {
                                     ForEach(Interest.allCases, id: \.self) { interest in
