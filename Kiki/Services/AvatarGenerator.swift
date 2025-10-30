@@ -26,7 +26,7 @@ final class AvatarGenerator {
         let kidGender = persona.sex == .female ? "girl" : "boy"
 
         let extractedrompt: ImagePlaygroundConcept = .extracted(
-            from: "Create a 5-year-old \(kidGender) that play with \(persona.interest.rawValue)."
+            from: "Create a 5-year-old \(kidGender) character that play with \(persona.interest.rawValue)."
         )
         let avatarReferenceImg = NSImage(named: kidGender)
         guard let avatarReferenceCg = avatarReferenceImg?.cgImage else { return nil }
