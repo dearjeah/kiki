@@ -27,6 +27,8 @@ struct StartPage: View {
     
     // Foundation Model Related
     @State var userAnswer: String = ""
+    @State private var isUnderstand: Bool = false
+    @State private var latestSay: String = ""
     @State private var session: LanguageModelSession? = nil
     
     // UI Related
@@ -183,6 +185,9 @@ struct StartPage: View {
                         .glassEffect(.regular.tint(.white).interactive())
                         .padding()
                     }
+                    .sheet(isPresented: $isUnderstand, onDismiss: { resetAfterUnderstanding() }) {
+                        understandingSheet()
+                    }
             case .unavailable(.deviceNotEligible):
                 ContentUnavailableView("Apple Intelligence is not available for your device. Please buy a new iphone :)", systemImage: "exclamationmark.octagon")
                 
@@ -253,13 +258,20 @@ extension StartPage {
         do {
             let response = try await session!.respond(
                 to: userAnswer,
+                generating: KikiResponse.self,
                 options: options
             )
             messages.append(
-                MessageModel(messages: response.content,
+                MessageModel(messages: response.content.say,
                              type: .bot,
                              timeDate: formattedDateString(date: Date.now))
             )
+            // Capture latest say for sheet display
+            latestSay = response.content.say
+            // If the model indicates understanding, present the sheet
+            if response.content.isUnderstand {
+                isUnderstand = true
+            }
             clearPrompt()
         } catch {
             print("response error")
@@ -281,6 +293,13 @@ extension StartPage {
         userAnswer = ""
     }
     
+    private func resetAfterUnderstanding() {
+        // Reset the LanguageModel session with the latest instructions
+        session = LanguageModelSession(instructions: instructions)
+        // Turn the flag back to false
+        isUnderstand = false
+    }
+    
     
     // UI Related
     private func scrollToBottom(scrollView: ScrollViewProxy) {
@@ -298,6 +317,26 @@ extension StartPage {
         // Or, for a custom format:
         // formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return formatter.string(from: date)
+    }
+    
+    @ViewBuilder
+    private func understandingSheet() -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Great job!")
+                .font(.title2)
+                .bold()
+            Text(latestSay)
+                .font(.body)
+                .padding(.vertical)
+            Spacer()
+            Button("Close") {
+                // Dismiss by flipping the flag; onDismiss will handle reset
+                isUnderstand = false
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .presentationDetents([.medium, .large])
     }
 }
 
