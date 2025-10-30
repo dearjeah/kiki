@@ -18,4 +18,3 @@ struct MessageModel: Hashable {
     var type: MessageType
     var timeDate: String = ""
 }
-
