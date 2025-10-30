@@ -12,19 +12,19 @@ struct StartPage: View {
     // Model Related
     @State private var temperature =  0.7
     @State private var maximumResponseTokens = 200
-   
+
     @State var kikiCharacter: Kiki = Kiki(
         name: "Kiki",
         sex: .male,
         interest: .spaceScience,
         nationality: .korean)
-    
+
     // Foundation Model Related
     @State var userAnswer: String = ""
     @State private var isUnderstand: Bool = false
     @State private var latestSay: String = ""
     @State private var session: LanguageModelSession? = nil
-    
+
     // UI Related
     @State var isShowingInspector: Bool = false
     @State private var messages: [MessageModel] = []
@@ -40,131 +40,132 @@ struct StartPage: View {
             switch SystemLanguageModel.default.availability {
             case .available:
                 ZStack {
-                    VStack {
-                        if let kidAvatarCGImage {
+                    if let kidAvatarCGImage {
+                        VStack {
                             Image(
                                 nsImage: NSImage(
                                     cgImage: kidAvatarCGImage,
                                     size: .init(width: 200, height: 200)
                                 )
-                            )
-                        } else {
-                            ProgressView("Waiting for Kiki")
-                        }
-                        messagesList
-                    }
-                    if isResettingSession {
-                        VStack {
-                            ProgressView("Resetting session…")
-                                .progressViewStyle(.circular)
+                            ).clipShape(Circle())
                                 .padding()
+                            messagesList
                         }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color.black.opacity(0.1))
+                        if isResettingSession {
+                            VStack {
+                                ProgressView("Resetting session…")
+                                    .progressViewStyle(.circular)
+                                    .padding()
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.black.opacity(0.1))
+                        }
+                    } else {
+                        ProgressView("Waiting for Kiki")
                     }
                 }
-                    .task {
-                        if session == nil {
-                            Task {
-                                kidAvatarCGImage = try await generator.generateKiki(with: kikiCharacter)
-                                await resetSession()
-                            }
+                .task {
+                    if session == nil {
+                        Task {
+                            kidAvatarCGImage = try await generator.generateKiki(with: kikiCharacter)
+                            await resetSession()
                         }
                     }
-                    .toolbar {
-                        ToolbarSpacer(.flexible)
-                        ToolbarItem {
-                            Button {
-                                isShowingInspector.toggle()
-                            } label: {
-                                Image(systemName: "sidebar.trailing")
-                            }
-                            
+                }
+                .toolbar {
+                    ToolbarSpacer(.flexible)
+                    ToolbarItem {
+                        Button {
+                            isShowingInspector.toggle()
+                        } label: {
+                            Image(systemName: "sidebar.trailing")
                         }
+
                     }
-                    .inspector(isPresented: $isShowingInspector) {
-                        VStack(alignment: .leading) {
-                            Text("Meet the kid!")
-                                .font(.headline)
-                                .padding(.bottom)
-                            
-                            HStack {
-                                Text("Kid Name")
-                                    .font(.callout)
-                                TextField("", text: $kikiCharacter.name)
-                                    .onChange(of: kikiCharacter.name) { oldValue, newValue in
-                                        // Debounce session reset to avoid triggering on every keystroke
-                                        nameDebounceWorkItem?.cancel()
-                                        let workItem = DispatchWorkItem { [newValue] in
-                                            // Ensure the latest typed name is used (already assigned above)
-                                            Task { await resetSession() }
-                                        }
-                                        nameDebounceWorkItem = workItem
-                                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
-                                    }
-                            }
+                }
+                .inspector(isPresented: $isShowingInspector) {
+                    VStack(alignment: .leading) {
+                        Text("Meet the kid!")
+                            .font(.headline)
                             .padding(.bottom)
-                            
-                            VStack(alignment: .leading) {
-                                Picker("Gender", selection: $kikiCharacter.sex) {
-                                    Text("Male").tag(Sex.male)
-                                    Text("Female").tag(Sex.female)
-                                    Text("Other / Unspecified").tag(Sex.other)
-                                }
-                                .onChange(of: kikiCharacter.sex) { _, _ in
-                                    Task { await resetSession() }
-                                }
-                            }.pickerStyle(.radioGroup)
-                                .padding(.bottom)
-                                
-                            VStack(alignment: .leading) {
-                                Picker("Interest", selection: $kikiCharacter.interest) {
-                                    ForEach(Interest.allCases, id: \.self) { interest in
-                                        Text(interest.rawValue).tag(interest)
-                                    }
-                                }
-                                .onChange(of: kikiCharacter.interest) { _, _ in
-                                    Task { await resetSession() }
-                                }
-                            }
-                            .pickerStyle(.radioGroup)
-                            .padding(.bottom)
-                            
-                            VStack(alignment: .leading) {
-                                Picker("Nationality", selection: $kikiCharacter.nationality) {
-                                    ForEach(Nationality.allCases, id: \.self) { nationality in
-                                        Text(nationality.rawValue).tag(nationality)
-                                    }
-                                }
-                                .onChange(of: kikiCharacter.nationality) { _, _ in
-                                    Task { await resetSession() }
-                                }
-                            }
-                            .pickerStyle(.radioGroup)
-                            
-                            Spacer()
-                        }
-                        .padding()
-                    }
-                    .safeAreaInset(edge: .bottom) {
+
                         HStack {
-                            TextField("Type your message here and press ⏎", text: $userAnswer)
-                                .padding(5)
-                                .textFieldStyle(.plain)
-                                .padding(5)
-                                .onSubmit {
-                                    askTheChatbot()
+                            Text("Kid Name")
+                                .font(.callout)
+                            TextField("", text: $kikiCharacter.name)
+                                .onChange(of: kikiCharacter.name) { oldValue, newValue in
+                                    // Debounce session reset to avoid triggering on every keystroke
+                                    nameDebounceWorkItem?.cancel()
+                                    let workItem = DispatchWorkItem { [newValue] in
+                                        // Ensure the latest typed name is used (already assigned above)
+                                        Task { await resetSession() }
+                                    }
+                                    nameDebounceWorkItem = workItem
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: workItem)
                                 }
                         }
-                        .glassEffect(.regular.tint(.white).interactive())
-                        .padding()
+                        .padding(.bottom)
+
+                        VStack(alignment: .leading) {
+                            Picker("Gender", selection: $kikiCharacter.sex) {
+                                Text("Male").tag(Sex.male)
+                                Text("Female").tag(Sex.female)
+                                Text("Other / Unspecified").tag(Sex.other)
+                            }
+                            .onChange(of: kikiCharacter.sex) { _, _ in
+                                Task { await resetSession() }
+                            }
+                        }.pickerStyle(.radioGroup)
+                            .padding(.bottom)
+
+                        VStack(alignment: .leading) {
+                            Picker("Interest", selection: $kikiCharacter.interest) {
+                                ForEach(Interest.allCases, id: \.self) { interest in
+                                    Text(interest.rawValue).tag(interest)
+                                }
+                            }
+                            .onChange(of: kikiCharacter.interest) { _, _ in
+                                Task { await resetSession() }
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+                        .padding(.bottom)
+
+                        VStack(alignment: .leading) {
+                            Picker("Nationality", selection: $kikiCharacter.nationality) {
+                                ForEach(Nationality.allCases, id: \.self) { nationality in
+                                    Text(nationality.rawValue).tag(nationality)
+                                }
+                            }
+                            .onChange(of: kikiCharacter.nationality) { _, _ in
+                                Task { await resetSession() }
+                            }
+                        }
+                        .pickerStyle(.radioGroup)
+
+                        Spacer()
                     }
-                    .sheet(isPresented: $isUnderstand, onDismiss: { resetAfterUnderstanding() }) {
-                        understandingSheet()
+                    .padding()
+                }
+                .safeAreaInset(edge: .bottom) {
+                    HStack {
+                        TextField("Type your message here and press ⏎", text: $userAnswer)
+                            .padding(5)
+                            .textFieldStyle(.plain)
+                            .padding(5)
+                            .onSubmit {
+                                askTheChatbot()
+                            }
                     }
+                    .glassEffect(.regular.tint(.white).interactive())
+                    .padding()
+                }
+                .sheet(isPresented: $isUnderstand, onDismiss: { resetAfterUnderstanding() }) {
+                    understandingSheet()
+                }
             case .unavailable(.deviceNotEligible):
                 ContentUnavailableView("Apple Intelligence is not available for your device. Please buy a new iphone :)", systemImage: "exclamationmark.octagon")
-                
+
             case .unavailable(.appleIntelligenceNotEnabled):
                 VStack{
                     Text("Please enable Apple Intelligence in your Systems Settings")
@@ -178,7 +179,7 @@ struct StartPage: View {
             }
         }
     }
-    
+
     @ViewBuilder
     var messagesList: some View {
         ScrollView {
@@ -384,28 +385,28 @@ extension StartPage {
         """
         session = LanguageModelSession(instructions: instructions)
         // Announce session reset with current character profile
-//        let profileSummary = """
-//        Session reset with character profile:\n- Name: \(kikiCharacter.name)\n- Sex: \(kikiCharacter.sex.rawValue)\n- Nationality: \(kikiCharacter.nationality.rawValue)\n- Interest: \(kikiCharacter.interest.rawValue)
-//        """
-//        messages.append(
-//            MessageModel(
-//                messages: profileSummary,
-//                type: .bot,
-//                timeDate: formattedDateString(date: Date.now)
-//            )
-//        )
+        //        let profileSummary = """
+        //        Session reset with character profile:\n- Name: \(kikiCharacter.name)\n- Sex: \(kikiCharacter.sex.rawValue)\n- Nationality: \(kikiCharacter.nationality.rawValue)\n- Interest: \(kikiCharacter.interest.rawValue)
+        //        """
+        //        messages.append(
+        //            MessageModel(
+        //                messages: profileSummary,
+        //                type: .bot,
+        //                timeDate: formattedDateString(date: Date.now)
+        //            )
+        //        )
         // Turn the flag back to false
         isUnderstand = false
         await MainActor.run { isResettingSession = false }
     }
-    
+
     //MARK: Foundation Models func
     private func generate() async {
         let options = GenerationOptions(//sampling: .greedy,
-                                        temperature: temperature,
-                                        maximumResponseTokens: maximumResponseTokens)
+            temperature: temperature,
+            maximumResponseTokens: maximumResponseTokens)
         ensureSessionInitialized()
-        
+
         do {
             let response = try await session!.respond(
                 to: userAnswer,
@@ -428,7 +429,7 @@ extension StartPage {
             print("response error")
         }
     }
-    
+
     private func askTheChatbot() {
         messages.append(
             MessageModel(messages: userAnswer,
@@ -439,18 +440,18 @@ extension StartPage {
             await generate()
         }
     }
-    
+
     private func clearPrompt() {
         userAnswer = ""
     }
-    
+
     private func resetAfterUnderstanding() {
         // Reset the LanguageModel session with the latest instructions
         Task { await resetSession() }
-        
+
     }
-    
-    
+
+
     // UI Related
     private func scrollToBottom(scrollView: ScrollViewProxy) {
         if let lastMessage = messages.last {
@@ -459,7 +460,7 @@ extension StartPage {
             }
         }
     }
-    
+
     private func formattedDateString(date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .long // Example: "October 28, 2025"
@@ -468,7 +469,7 @@ extension StartPage {
         // formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         return formatter.string(from: date)
     }
-    
+
     @ViewBuilder
     private func understandingSheet() -> some View {
         VStack(alignment: .leading, spacing: 16) {
