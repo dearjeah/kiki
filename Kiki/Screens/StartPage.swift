@@ -67,7 +67,7 @@ struct StartPage: View {
                 .task {
                     if session == nil {
                         Task {
-                            kidAvatarCGImage = try await generator.generateKiki(with: kikiCharacter)
+
                             await resetSession()
                         }
                     }
@@ -228,6 +228,8 @@ extension StartPage {
     }
 
     private func resetSession() async {
+        kidAvatarCGImage = nil
+
         await MainActor.run { isResettingSession = true }
         // Build instructions using the latest kikiCharacter values
         instructions = """
@@ -397,7 +399,14 @@ extension StartPage {
         //        )
         // Turn the flag back to false
         isUnderstand = false
-        await MainActor.run { isResettingSession = false }
+        do {
+            kidAvatarCGImage = try await generator.generateKiki(with: kikiCharacter)
+        } catch {
+            print(error)
+        }
+        await MainActor.run {
+            isResettingSession = false
+        }
     }
 
     //MARK: Foundation Models func
